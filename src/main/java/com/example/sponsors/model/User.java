@@ -1,6 +1,6 @@
 package com.example.sponsors.model;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
@@ -17,6 +17,7 @@ public class User {
     @Column(unique = true)
     private String email;
 
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     private String password;
 
     @Column(name = "created_at", updatable = false)
@@ -25,7 +26,6 @@ public class User {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
-    // Construtores
     public User() {}
 
     public User(String name, String email, String password) {
@@ -45,7 +45,6 @@ public class User {
         this.updatedAt = LocalDateTime.now();
     }
 
-    // Getters e Setters
     public Long getId() {
         return id;
     }
@@ -69,7 +68,7 @@ public class User {
     public void setEmail(String email) {
         this.email = email;
     }
-    @JsonIgnore
+
     public String getPassword() {
         return password;
     }
