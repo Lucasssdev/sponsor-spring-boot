@@ -23,14 +23,19 @@ public class Sponsors {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
+    @ManyToOne
+    @JoinColumn(name = "created_by_id")
+    private User createdBy;
+
     // Construtores
     public Sponsors() {
     }
 
-    public Sponsors(String name, String cnpj, String description) {
+    public Sponsors(String name, String cnpj, String description, User createdBy) {
         this.name = name;
         this.cnpj = cnpj;
         this.description = description;
+        this.createdBy = createdBy;
     }
 
     // Getters e Setters
@@ -80,5 +85,13 @@ public class Sponsors {
 
     public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
+    }
+
+    public User getCreatedBy() {
+        return createdBy;
+    }
+
+    public void setCreatedBy(User createdBy) {
+        this.createdBy = createdBy;
     }
 }

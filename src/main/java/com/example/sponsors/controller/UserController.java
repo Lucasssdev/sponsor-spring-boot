@@ -37,7 +37,7 @@ public class UserController {
         return ResponseEntity.ok("Token gerado com sucesso.");
     }
 
-    @PostMapping("/register")
+    @PostMapping
     public ResponseEntity<String> registerUser(@RequestBody User user) {
         userService.createUser(user);
         return ResponseEntity.ok("Usuário cadastrado com sucesso.");

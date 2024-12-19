@@ -9,6 +9,7 @@ import com.example.sponsors.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map; // Necessário para usar Map<String, Object>
 import java.util.Optional;
@@ -77,19 +78,21 @@ public class EventsService {
         // Adiciona os patrocinadores e o usuário criador ao evento
         events.setSponsors(sponsors);
         events.setCreatedBy(createdBy);
-
+        events.setCreatedAt(LocalDateTime.now());
         // Salva o evento
         return eventsRepository.save(events);
     }
+
     public Events update(Long id, Events events) {
         Events existingEvents = eventsRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Events not found"));
         if (events.getName() != null) {
             existingEvents.setName(events.getName());
         }
-        if (events.getDescription()!=null){
+        if (events.getDescription() != null) {
             existingEvents.setDescription(events.getDescription());
         }
+        existingEvents.setUpdatedAt(LocalDateTime.now());
         return eventsRepository.save(existingEvents);
     }
 
