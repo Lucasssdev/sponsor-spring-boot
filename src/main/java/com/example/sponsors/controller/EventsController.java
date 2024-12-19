@@ -5,8 +5,9 @@ import com.example.sponsors.service.EventsService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import java.util.List;
 
+import java.util.List;
+import java.util.Map;
 @RestController
 @RequestMapping("/api/events")
 public class EventsController {
@@ -19,7 +20,6 @@ public class EventsController {
         return ResponseEntity.ok(eventsService.findAll());
     }
 
-
     @GetMapping("/{id}")
     public ResponseEntity<Events> getEventById(@PathVariable Long id) {
         return eventsService.findById(id)
@@ -28,8 +28,9 @@ public class EventsController {
     }
 
     @PostMapping
-    public ResponseEntity<Events> createEvent(@RequestBody Events events) {
-        return ResponseEntity.ok(eventsService.save(events));
+    public ResponseEntity<Events> createEvent(@RequestBody Map<String, Object> payload) {
+        Events savedEvent = eventsService.save(payload);
+        return ResponseEntity.ok(savedEvent);
     }
 
     @PutMapping("/{id}")

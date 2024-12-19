@@ -4,7 +4,7 @@ import jakarta.persistence.*;
 import java.time.LocalDateTime;
 import java.time.LocalDate;
 import java.time.LocalTime;
-
+import java.util.Set;
 
 @Entity
 @Table(name = "events")
@@ -30,15 +30,28 @@ public class Events {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
+    @ManyToMany
+    @JoinTable(
+            name = "events_sponsors",
+            joinColumns = @JoinColumn(name = "event_id"),
+            inverseJoinColumns = @JoinColumn(name = "sponsor_id")
+    )
+    private Set<Sponsors> sponsors;
+
+    @ManyToOne
+    @JoinColumn(name = "created_by_id")
+    private User createdBy;
+
     // Construtores
     public Events() {
     }
 
-    public Events(String name, String description, LocalDate startDate, LocalTime startTime) {
+    public Events(String name, String description, LocalDate startDate, LocalTime startTime, User createdBy) {
         this.name = name;
         this.description = description;
         this.startDate = startDate;
         this.startTime = startTime;
+        this.createdBy = createdBy;
     }
 
     @PrePersist
@@ -107,5 +120,21 @@ public class Events {
 
     public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
+    }
+
+    public Set<Sponsors> getSponsors() {
+        return sponsors;
+    }
+
+    public void setSponsors(Set<Sponsors> sponsors) {
+        this.sponsors = sponsors;
+    }
+
+    public User getCreatedBy() {
+        return createdBy;
+    }
+
+    public void setCreatedBy(User createdBy) {
+        this.createdBy = createdBy;
     }
 }

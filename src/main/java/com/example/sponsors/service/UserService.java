@@ -78,7 +78,6 @@ public class UserService {
         if (userDetails.getPassword() != null && !userDetails.getPassword().isEmpty()) {
             existingUser.setPassword(passwordEncoder.encode(userDetails.getPassword()));
         }
-
         // Salvar alterações
         User updatedUser = userRepository.save(existingUser);
         log.info("Usuário atualizado com sucesso: {}", updatedUser.getId());

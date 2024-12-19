@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Map;
 import java.util.List;
 
 @RestController
@@ -28,8 +29,9 @@ public class SponsorsController {
     }
 
     @PostMapping
-    public ResponseEntity<Sponsors> createSponsor(@RequestBody Sponsors sponsor) {
-        return ResponseEntity.ok(sponsorsService.save(sponsor));
+    public ResponseEntity<Sponsors> createSponsor(@RequestBody Map<String, Object> payload) {
+        Sponsors savedSponsor = sponsorsService.save(payload);
+        return ResponseEntity.ok(savedSponsor);
     }
 
     @PutMapping("/{id}")
