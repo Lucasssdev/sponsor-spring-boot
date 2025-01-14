@@ -1,7 +1,9 @@
-package com.example.loginauthapi.infra.security;
+package com.example.sponsors.config;
 
-import com.example.loginauthapi.domain.user.User;
-import com.example.loginauthapi.repositories.UserRepository;
+
+import com.example.sponsors.model.User;
+import com.example.sponsors.repository.UserRepository;
+import com.example.sponsors.service.TokenService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
