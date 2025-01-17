@@ -8,6 +8,7 @@ import org.springframework.web.client.RestTemplate;
 
 @Service
 public class GeocodingService {
+
     private final String GOOGLE_API_KEY = "AIzaSyB8_nlhO6iJNytV_DZocoPNBKw8HMxgRtA";
 
     public Location getCoordinates(String address) {

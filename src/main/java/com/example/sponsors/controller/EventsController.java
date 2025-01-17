@@ -40,16 +40,22 @@ public class EventsController {
 
     @PostMapping("/register")
     public ResponseEntity<Events> createEvent(@RequestBody Map<String, Object> payload) {
+        Location location = locationService.createLocationFromPayload(payload);
         Events savedEvent = eventsService.save(payload);
         return ResponseEntity.ok(savedEvent);
     }
 
-    @PutMapping("/{id}")
+    @PutMapping("/update/{id}")  // Esta anotação é crucial para o PUT funcionar
     public ResponseEntity<Events> updateEvent(@PathVariable Long id, @RequestBody Events events) {
-        return ResponseEntity.ok(eventsService.update(id, events));
+        try {
+            Events updatedEvent = eventsService.update(id, events);
+            return ResponseEntity.ok(updatedEvent);
+        } catch (RuntimeException e) {
+            return ResponseEntity.notFound().build();
+        }
     }
 
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/delete/{id}")
     public ResponseEntity<Void> deleteEvent(@PathVariable Long id) {
         eventsService.deleteById(id);
         return ResponseEntity.noContent().build();
@@ -63,6 +69,7 @@ public class EventsController {
         }
         return locationService.saveLocation(location);
     }
+
 
     @PostMapping("/{eventId}/associate-location")
     public Events associateLocationToEvent(@PathVariable Long eventId, @RequestParam Long locationId) {

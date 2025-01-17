@@ -28,7 +28,7 @@ public class SponsorsController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
-    @PostMapping
+    @PostMapping("/register")
     public ResponseEntity<Sponsors> createSponsor(@RequestBody Map<String, Object> payload) {
         Sponsors savedSponsor = sponsorsService.save(payload);
         return ResponseEntity.ok(savedSponsor);

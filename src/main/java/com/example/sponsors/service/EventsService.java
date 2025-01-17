@@ -1,6 +1,7 @@
 package com.example.sponsors.service;
 
 import com.example.sponsors.model.Events;
+import com.example.sponsors.model.Location;
 import com.example.sponsors.model.Sponsors;
 import com.example.sponsors.model.User;
 import com.example.sponsors.repository.EventsRepository;
@@ -9,14 +10,14 @@ import com.example.sponsors.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.List;
-import java.util.Map; // Necessário para usar Map<String, Object>
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.stream.Collectors; // Necessário para usar .stream() e Collectors.toSet
-import java.time.LocalDate;
-import java.time.LocalTime;
+import java.util.stream.Collectors;
 
 @Service
 public class EventsService {
@@ -30,6 +31,12 @@ public class EventsService {
     @Autowired
     private UserRepository userRepository;
 
+    @Autowired
+    private LocationService locationService;
+
+    @Autowired
+    private GeocodingService geocodingService; // Para buscar coordenadas
+
     public List<Events> findAll() {
         return eventsRepository.findAll();
     }
@@ -38,54 +45,67 @@ public class EventsService {
         return eventsRepository.findById(id);
     }
 
-
     public Events save(Map<String, Object> payload) {
-        // Extrai os campos do payload
-        String name = (String) payload.get("name");
-        String description = (String) payload.get("description");
+        // Criar um novo evento
+        Events event = new Events();
+
+        event.setName((String) payload.get("name"));
+        event.setDescription((String) payload.get("description"));
+        event.setStartDate(LocalDate.parse((String) payload.get("startDate")));
+        event.setStartTime(LocalTime.parse((String) payload.get("startTime")));
+
+        // 📌 1️⃣ Verificar se a localização já existe pelo ID
+        Long locationId = payload.get("locationId") != null ? ((Number) payload.get("locationId")).longValue() : null;
+        Location location = null;
+
+        if (locationId != null) {
+            location = locationService.getLocationById(locationId)
+                    .orElseThrow(() -> new RuntimeException("Localização não encontrada!"));
+        } else {
+            // 📌 2️⃣ Criar nova localização usando o endereço fornecido
+            String address = (String) payload.get("address");
+            if (address == null || address.isEmpty()) {
+                throw new RuntimeException("Endereço é obrigatório para criar a localização!");
+            }
+
+            location = geocodingService.getCoordinates(address);
+            if (location == null) {
+                throw new RuntimeException("Falha ao obter coordenadas para o endereço!");
+            }
+
+            location = locationService.saveLocation(location);
+        }
+
+        // Definir localização no evento
+        event.setLocation(location);
+
+        // 📌 3️⃣ Associar Criador do Evento
         Long createdById = ((Number) payload.get("created_by")).longValue();
+        User createdBy = userRepository.findById(createdById)
+                .orElseThrow(() -> new RuntimeException("Usuário não encontrado com ID " + createdById));
+        event.setCreatedBy(createdBy);
+
+        // 📌 4️⃣ Associar Patrocinadores
         List<Integer> sponsorIdsList = (List<Integer>) payload.get("sponsors");
-
-        // Extrai e converte startDate e startTime
-        String startDateString = (String) payload.get("startDate");
-        String startTimeString = (String) payload.get("startTime");
-
-        LocalDate startDate = startDateString != null ? LocalDate.parse(startDateString) : null;
-        LocalTime startTime = startTimeString != null ? LocalTime.parse(startTimeString) : null;
-
-        // Converte a lista de Integer para List<Long>
         List<Long> sponsorIds = sponsorIdsList.stream()
                 .map(Integer::longValue)
                 .toList();
 
-        // Cria uma instância de Events
-        Events events = new Events();
-        events.setName(name);
-        events.setDescription(description);
-        events.setStartDate(startDate);
-        events.setStartTime(startTime);
-
-        // Busca os patrocinadores pelo ID
         Set<Sponsors> sponsors = sponsorIds.stream()
                 .map(id -> sponsorsRepository.findById(id)
-                        .orElseThrow(() -> new RuntimeException("Sponsor not found with ID " + id)))
+                        .orElseThrow(() -> new RuntimeException("Patrocinador não encontrado com ID " + id)))
                 .collect(Collectors.toSet());
+        event.setSponsors(sponsors);
 
-        // Busca o usuário que criou o evento
-        User createdBy = userRepository.findById(createdById)
-                .orElseThrow(() -> new RuntimeException("User not found with ID " + createdById));
+        event.setCreatedAt(LocalDateTime.now());
 
-        // Adiciona os patrocinadores e o usuário criador ao evento
-        events.setSponsors(sponsors);
-        events.setCreatedBy(createdBy);
-        events.setCreatedAt(LocalDateTime.now());
-        // Salva o evento
-        return eventsRepository.save(events);
+        return eventsRepository.save(event);
     }
 
     public Events update(Long id, Events events) {
         Events existingEvents = eventsRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Events not found"));
+                .orElseThrow(() -> new RuntimeException("Evento não encontrado"));
+
         if (events.getName() != null) {
             existingEvents.setName(events.getName());
         }
@@ -93,10 +113,22 @@ public class EventsService {
             existingEvents.setDescription(events.getDescription());
         }
         existingEvents.setUpdatedAt(LocalDateTime.now());
+
         return eventsRepository.save(existingEvents);
     }
 
     public void deleteById(Long id) {
         eventsRepository.deleteById(id);
+    }
+
+    public Events associateLocation(Long eventId, Long locationId) {
+        Events event = eventsRepository.findById(eventId)
+                .orElseThrow(() -> new RuntimeException("Evento não encontrado!"));
+
+        Location location = locationService.getLocationById(locationId)
+                .orElseThrow(() -> new RuntimeException("Localização não encontrada!"));
+
+        event.setLocation(location);
+        return eventsRepository.save(event);
     }
 }
