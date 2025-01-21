@@ -27,56 +27,54 @@ public class SecurityConfig {
     private CustomUserDetailsService userDetailsService;
 
     @Autowired
-    SecurityFilter securityFilter;
+    private SecurityFilter securityFilter; // Filtro para validação do token
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-                .csrf(csrf -> csrf.disable())
-                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .cors(cors -> cors.configurationSource(corsConfigurationSource())) // Configuração CORS
+                .csrf(csrf -> csrf.disable()) // Desabilitando CSRF
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)) // Sessão stateless
                 .authorizeHttpRequests(authorize -> authorize
-                        // Rotas públicas
+                        // Rotas públicas (não exigem autenticação)
                         .requestMatchers(HttpMethod.POST, "/auth/login").permitAll()
                         .requestMatchers(HttpMethod.POST, "/auth/register").permitAll()
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
 
-                        // Rotas de usuário
-                        .requestMatchers(HttpMethod.GET, "/user").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/user/all").permitAll()
-                        .requestMatchers(HttpMethod.PUT, "/user/update/**").permitAll()
-                        .requestMatchers(HttpMethod.DELETE, "/user/delete/**").permitAll()
+                        // Rotas protegidas (exigem autenticação)
+                        .requestMatchers(HttpMethod.GET, "/user").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/user/all").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/user/update/**").authenticated()
+                        .requestMatchers(HttpMethod.DELETE, "/user/delete/**").hasRole("ADMIN")
 
-                        // Rotas de eventos
-                        .requestMatchers(HttpMethod.GET, "/api/events/**").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/api/events/**").permitAll()
-                        .requestMatchers(HttpMethod.PUT, "/api/events/**").permitAll()
-                        .requestMatchers(HttpMethod.DELETE, "/api/events/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/events/**").authenticated()
+                        .requestMatchers(HttpMethod.POST, "/api/events/**").authenticated()
+                        .requestMatchers(HttpMethod.PUT, "/api/events/**").authenticated()
+                        .requestMatchers(HttpMethod.DELETE, "/api/events/**").hasRole("ADMIN")
 
-                        // Rotas de locations
-                        .requestMatchers(HttpMethod.GET, "/api/locations/**").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/api/locations/**").permitAll()
-                        .requestMatchers(HttpMethod.PUT, "/api/locations/**").permitAll()
-                        .requestMatchers(HttpMethod.DELETE, "/api/locations/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/locations/**").authenticated()
+                        .requestMatchers(HttpMethod.POST, "/api/locations/**").authenticated()
+                        .requestMatchers(HttpMethod.PUT, "/api/locations/**").authenticated()
+                        .requestMatchers(HttpMethod.DELETE, "/api/locations/**").hasRole("ADMIN")
 
-                        // Rotas de sponsors
-                        .requestMatchers(HttpMethod.GET, "/api/sponsors/**").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/api/sponsors/**").permitAll()
-                        .requestMatchers(HttpMethod.PUT, "/api/sponsors/**").permitAll()
-                        .requestMatchers(HttpMethod.DELETE, "/api/sponsors/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/sponsors/**").authenticated()
+                        .requestMatchers(HttpMethod.POST, "/api/sponsors/**").authenticated()
+                        .requestMatchers(HttpMethod.PUT, "/api/sponsors/**").authenticated()
+                        .requestMatchers(HttpMethod.DELETE, "/api/sponsors/**").hasRole("ADMIN")
 
                         // Qualquer outra rota requer autenticação
-                        .anyRequest().permitAll()
+                        .anyRequest().authenticated()
                 )
+                // Adicionando o filtro de validação do token antes do filtro padrão do Spring Security
                 .addFilterBefore(securityFilter, UsernamePasswordAuthenticationFilter.class);
+
         return http.build();
     }
-
 
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(Arrays.asList("*")); // Configure according to your needs
+        configuration.setAllowedOrigins(Arrays.asList("*")); // Configurar conforme necessário
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type"));
         configuration.setExposedHeaders(Arrays.asList("Authorization"));
