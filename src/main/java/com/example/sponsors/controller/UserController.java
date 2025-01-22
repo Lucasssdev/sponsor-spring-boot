@@ -7,6 +7,7 @@ import com.example.sponsors.service.JwtService;
 import com.example.sponsors.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
@@ -47,7 +48,7 @@ public class UserController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
-    @PutMapping("/update/{id}")
+    @PutMapping("/{id}")
     public ResponseEntity<User> updateUser(@PathVariable Long id, @RequestBody RegisterRequestDTO body) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("User not found"));
@@ -66,7 +67,7 @@ public class UserController {
         User updatedUser = new User(user.getId(), user.getName(), user.getEmail());
         return ResponseEntity.ok(updatedUser);
     }
-        @DeleteMapping("/delete/{id}")
+        @DeleteMapping("/{id}")
         public ResponseEntity<User> deleteUser (@PathVariable Long id){
             userService.deleteUser(id);
             return ResponseEntity.noContent().build();

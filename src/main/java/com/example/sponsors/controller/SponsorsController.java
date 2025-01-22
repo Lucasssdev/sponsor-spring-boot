@@ -1,9 +1,11 @@
 package com.example.sponsors.controller;
 
 import com.example.sponsors.model.Sponsors;
+import com.example.sponsors.repository.SponsorsRepository;
 import com.example.sponsors.service.SponsorsService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
@@ -15,6 +17,8 @@ public class SponsorsController {
 
     @Autowired
     private SponsorsService sponsorsService;
+    @Autowired
+    private SponsorsRepository sponsorsRepository;
 
     @GetMapping
     public ResponseEntity<List<Sponsors>> getAllSponsors() {
@@ -22,13 +26,14 @@ public class SponsorsController {
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("hasAuthority('USER')")
     public ResponseEntity<Sponsors> getSponsorById(@PathVariable Long id) {
         return sponsorsService.findById(id)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
 
-    @PostMapping("/register")
+    @PostMapping
     public ResponseEntity<Sponsors> createSponsor(@RequestBody Map<String, Object> payload) {
         Sponsors savedSponsor = sponsorsService.save(payload);
         return ResponseEntity.ok(savedSponsor);

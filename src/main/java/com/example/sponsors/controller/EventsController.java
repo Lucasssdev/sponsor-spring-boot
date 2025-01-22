@@ -8,6 +8,7 @@ import com.example.sponsors.service.GeocodingService;
 import com.example.sponsors.service.LocationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -38,14 +39,19 @@ public class EventsController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
-    @PostMapping("/register")
+    @PostMapping
     public ResponseEntity<Events> createEvent(@RequestBody Map<String, Object> payload) {
-        Location location = locationService.createLocationFromPayload(payload);
-        Events savedEvent = eventsService.save(payload);
-        return ResponseEntity.ok(savedEvent);
+        try {
+            Location location = locationService.createLocationFromPayload(payload);
+            Events savedEvent = eventsService.save(payload);
+            return ResponseEntity.ok(savedEvent);
+        } catch (Exception e){
+            e.printStackTrace(); // Log para debug
+            return ResponseEntity.badRequest().build();
+        }
     }
 
-    @PutMapping("/update/{id}")  // Esta anotação é crucial para o PUT funcionar
+    @PutMapping("/{id}")  // Esta anotação é crucial para o PUT funcionar
     public ResponseEntity<Events> updateEvent(@PathVariable Long id, @RequestBody Events events) {
         try {
             Events updatedEvent = eventsService.update(id, events);
@@ -55,7 +61,7 @@ public class EventsController {
         }
     }
 
-    @DeleteMapping("/delete/{id}")
+    @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteEvent(@PathVariable Long id) {
         eventsService.deleteById(id);
         return ResponseEntity.noContent().build();

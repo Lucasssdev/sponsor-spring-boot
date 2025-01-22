@@ -6,6 +6,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -21,6 +22,7 @@ import java.util.Arrays;
 
 @Configuration
 @EnableWebSecurity
+@EnableMethodSecurity
 public class SecurityConfig {
 
     @Autowired
@@ -43,24 +45,24 @@ public class SecurityConfig {
 
                         // Rotas protegidas (exigem autenticação)
                         .requestMatchers(HttpMethod.GET, "/user").authenticated()
-                        .requestMatchers(HttpMethod.GET, "/user/all").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.PUT, "/user/update/**").authenticated()
-                        .requestMatchers(HttpMethod.DELETE, "/user/delete/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.GET, "/user/all").authenticated()
+                        .requestMatchers(HttpMethod.PUT, "/user/**").authenticated()
+                        .requestMatchers(HttpMethod.DELETE, "/user/**").authenticated()
 
                         .requestMatchers(HttpMethod.GET, "/api/events/**").authenticated()
                         .requestMatchers(HttpMethod.POST, "/api/events/**").authenticated()
                         .requestMatchers(HttpMethod.PUT, "/api/events/**").authenticated()
-                        .requestMatchers(HttpMethod.DELETE, "/api/events/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/events/**").authenticated()
 
                         .requestMatchers(HttpMethod.GET, "/api/locations/**").authenticated()
                         .requestMatchers(HttpMethod.POST, "/api/locations/**").authenticated()
                         .requestMatchers(HttpMethod.PUT, "/api/locations/**").authenticated()
-                        .requestMatchers(HttpMethod.DELETE, "/api/locations/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/locations/**").authenticated()
 
                         .requestMatchers(HttpMethod.GET, "/api/sponsors/**").authenticated()
                         .requestMatchers(HttpMethod.POST, "/api/sponsors/**").authenticated()
                         .requestMatchers(HttpMethod.PUT, "/api/sponsors/**").authenticated()
-                        .requestMatchers(HttpMethod.DELETE, "/api/sponsors/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/sponsors/**").authenticated()
 
                         // Qualquer outra rota requer autenticação
                         .anyRequest().authenticated()
