@@ -38,6 +38,10 @@ public class Sponsors {
         this.createdBy = createdBy;
     }
 
+    @OneToOne(cascade = CascadeType.ALL)
+    @JoinColumn(name = "location_id", referencedColumnName = "id")
+    private Location location;
+
     // Getters e Setters
     public Long getId() {
         return id;
