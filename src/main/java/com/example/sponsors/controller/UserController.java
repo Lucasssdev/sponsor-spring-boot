@@ -1,67 +1,75 @@
 package com.example.sponsors.controller;
 
+import com.example.sponsors.dto.RegisterRequestDTO;
 import com.example.sponsors.model.User;
+import com.example.sponsors.repository.UserRepository;
 import com.example.sponsors.service.JwtService;
 import com.example.sponsors.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
-import jakarta.validation.Valid;
+
 import java.util.List;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/api/users")
+@RequestMapping("/user")
 public class UserController {
 
     @Autowired
     private UserService userService;
 
     @Autowired
+    private UserRepository userRepository;
+
+    @Autowired
     private JwtService jwtService;
 
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
     @GetMapping
+    public ResponseEntity<String> getUser() {
+        return ResponseEntity.ok("sucesso!");
+    }
+
+    @GetMapping("/all")
     public ResponseEntity<List<User>> getAllUsers() {
         return ResponseEntity.ok(userService.findAllUsers());
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<User> getUserById(@PathVariable Long id) {
-        return ResponseEntity.of(userService.findUserById(id));
-    }
-
-    @PostMapping("/send-validation-token")
-    public ResponseEntity<String> sendValidationToken(@RequestParam String password) {
-        userService.validateAndGenerateToken(password);
-        return ResponseEntity.ok("Token gerado com sucesso.");
-    }
-
-    @PostMapping
-    public ResponseEntity<String> registerUser(@RequestBody User user) {
-        userService.createUser(user);
-        return ResponseEntity.ok("Usuário cadastrado com sucesso.");
+        return userService.findUserById(id)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<User> updateUser(@PathVariable Long id,  @RequestBody User userDetails) {
-        return ResponseEntity.ok(userService.updateUser(id, userDetails));
-    }
+    public ResponseEntity<User> updateUser(@PathVariable Long id, @RequestBody RegisterRequestDTO body) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        if (body.name() != null && !body.name().isEmpty()) {
+            user.setName(body.name());
+        }
+        if (body.email() != null && !body.email().isEmpty()) {
+            user.setEmail(body.email());
+        }
+        if (body.password() != null && !body.password().isEmpty()) {
+            user.setPassword(passwordEncoder.encode(body.password()));
+        } // Atualiza a senha criptografada
 
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteUser(@PathVariable Long id) {
-        userService.deleteUser(id);
-        return ResponseEntity.noContent().build();
-    }
+        userRepository.save(user);
 
-    @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody User loginRequest) {
-        return ResponseEntity.ok(userService.authenticateUser(loginRequest));
+        User updatedUser = new User(user.getId(), user.getName(), user.getEmail());
+        return ResponseEntity.ok(updatedUser);
     }
-
-    @PutMapping("/{id}/update-password")
-    public ResponseEntity<String> updatePassword(@PathVariable Long id, @RequestBody Map<String, String> payload) {
-        userService.updatePassword(id, payload.get("currentPassword"), payload.get("newPassword"));
-        return ResponseEntity.ok("Senha atualizada com sucesso.");
-    }
+        @DeleteMapping("/{id}")
+        public ResponseEntity<User> deleteUser (@PathVariable Long id){
+            userService.deleteUser(id);
+            return ResponseEntity.noContent().build();
+        }
 }

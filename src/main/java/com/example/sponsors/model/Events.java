@@ -39,6 +39,10 @@ public class Events {
     private Set<Sponsors> sponsors;
 
     @ManyToOne
+    @JoinColumn(name = "location_id") // Nome da coluna de referência
+    private Location location; // Relacionamento com Location
+
+    @ManyToOne
     @JoinColumn(name = "created_by_id")
     private User createdBy;
 
@@ -46,12 +50,13 @@ public class Events {
     public Events() {
     }
 
-    public Events(String name, String description, LocalDate startDate, LocalTime startTime, User createdBy) {
+    public Events(String name, String description, LocalDate startDate, LocalTime startTime, User createdBy, Location location) {
         this.name = name;
         this.description = description;
         this.startDate = startDate;
         this.startTime = startTime;
         this.createdBy = createdBy;
+        this.location = location;
     }
 
     @PrePersist
@@ -64,6 +69,7 @@ public class Events {
     protected void onUpdate() {
         this.updatedAt = LocalDateTime.now();
     }
+
 
     // Getters e Setters
     public Long getId() {
@@ -136,5 +142,13 @@ public class Events {
 
     public void setCreatedBy(User createdBy) {
         this.createdBy = createdBy;
+    }
+
+    public Location getLocation() {
+        return location;
+    }
+
+    public void setLocation(Location location) {
+        this.location = location; // Método de setLocation que deve estar correto
     }
 }
